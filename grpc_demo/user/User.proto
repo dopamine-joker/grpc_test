@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package user;
+
+import "google/protobuf/empty.proto";
+
+service UserService{
+  rpc GetUser(GetUserRequest) returns (User) {}
+  rpc GetAllUser(google.protobuf.Empty) returns (stream User) {}
+  rpc GetUserList(stream GetUserRequest) returns (stream User) {}
+
+  rpc AddUser(User) returns (AddUserResponse) {}
+  rpc AddUserList(stream User) returns (AddUserResponse) {}
+}
+
+message User {
+  int32 user_id = 1;
+  string name = 2;
+}
+
+message GetUserRequest {
+  int32 user_id = 1;
+}
+
+message AddUserResponse {
+  bool result = 1;
+}
+
