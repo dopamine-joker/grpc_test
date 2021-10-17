@@ -14,8 +14,8 @@ service UserService{
 }
 
 message User {
-  int32 user_id = 1;
-  string name = 2;
+  int32   user_id = 1;
+  string  name = 2;
 }
 
 message GetUserRequest {
