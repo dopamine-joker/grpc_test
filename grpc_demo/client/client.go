@@ -1,26 +1,28 @@
-package main
+package client
 
 import (
 	"context"
 	"fmt"
-	"io"
-	"log"
-
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/balancer/roundrobin"
+	"google.golang.org/grpc/resolver"
 	"google.golang.org/protobuf/types/known/emptypb"
 	pb "grpc_test/grpc_demo/user"
+	"io"
+	"log"
 )
 
 var (
-	port = 8899
+	etcdAddrs = []string{"127.0.0.1:49166", "127.0.0.1:49168", "127.0.0.1:49170"}
 )
 
 func getUser(client pb.UserServiceClient, userId int32) *pb.User {
 	user, err := client.GetUser(context.Background(), &pb.GetUserRequest{
 		UserId: userId,
 	})
+
 	if err != nil {
-		log.Fatalf("get user fail, userId: %d", userId)
+		log.Fatalf("get user fail, userId: %d, err : %v\n", userId, err)
 	}
 	return user
 }
@@ -99,8 +101,13 @@ func AddUserList(client pb.UserServiceClient, users []*pb.User) bool {
 	return response.GetResult()
 }
 
-func main() {
-	conn, err := grpc.Dial(fmt.Sprintf("localhost:%d", port), grpc.WithInsecure())
+func Start() {
+	r, err := NewResolver(etcdAddrs, BasePath, ServerPath, 5, 5)
+	if err != nil {
+		log.Fatalf("NewResolver err %v\n", err)
+	}
+	resolver.Register(r)
+	conn, err := grpc.Dial(fmt.Sprintf("%s://author/%s/%s", r.Scheme(), BasePath, ServerPath), grpc.WithBalancerName(roundrobin.Name), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("fail to dial: %v\n", err)
 	}
